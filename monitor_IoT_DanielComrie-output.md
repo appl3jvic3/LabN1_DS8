@@ -3,8 +3,8 @@
 ## 📊 Project Information
 
 - **Project Name**: `monitor_IoT_DanielComrie`
-- **Generated On**: 2026-09-24 16:17:37 (America/Panama / GMT-05:00)
-- **Total Files Processed**: 971
+- **Generated On**: 2026-09-24 16:26:16 (America/Panama / GMT-05:00)
+- **Total Files Processed**: 972
 - **Export Tool**: Easy Whole Project to Single Text File for LLMs v1.1.0
 - **Tool Author**: Jota / José Guilherme Pandolfi
 
@@ -1095,9 +1095,10 @@
 ├── 📁 eventos/
 │   ├── 📁 __pycache__/
 │   │   ├── 📄 __init__.cpython-314.pyc (751 B)
-│   │   ├── 📄 despachador.cpython-314.pyc (1.76 KB)
+│   │   ├── 📄 alertas.cpython-314.pyc (4.8 KB)
+│   │   ├── 📄 despachador.cpython-314.pyc (2.74 KB)
 │   │   ├── 📄 detectores.cpython-314.pyc (8.72 KB)
-│   │   └── 📄 manejadores.cpython-314.pyc (5.91 KB)
+│   │   └── 📄 manejadores.cpython-314.pyc (7.65 KB)
 │   ├── 📄 __init__.py (535 B)
 │   ├── 📄 alertas.py (3.56 KB)
 │   ├── 📄 despachador.py (2.18 KB)
@@ -1607,10 +1608,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Files | 971 |
+| Total Files | 972 |
 | Total Directories | 145 |
 | Text Files | 458 |
-| Binary Files | 513 |
+| Binary Files | 514 |
 | Total Size | 13.31 MB |
 
 ### 📄 File Types Distribution
@@ -1618,7 +1619,7 @@
 | Extension | Count |
 |-----------|-------|
 | `.py` | 437 |
-| `.pyc` | 431 |
+| `.pyc` | 432 |
 | `no extension` | 40 |
 | `.typed` | 15 |
 | `.txt` | 12 |
@@ -159634,6 +159635,7 @@ command = C:\Users\danco\AppData\Local\Python\pythoncore-3.14-64\python.exe -m v
 The following files were not included in the text content:
 
 - `eventos/__pycache__/__init__.cpython-314.pyc`
+- `eventos/__pycache__/alertas.cpython-314.pyc`
 - `eventos/__pycache__/despachador.cpython-314.pyc`
 - `eventos/__pycache__/detectores.cpython-314.pyc`
 - `eventos/__pycache__/manejadores.cpython-314.pyc`
@@ -160133,9 +160135,9 @@ def detectar(clave, lectura):
 - **Location**: `eventos/manejadores.py`
 - **Relative Path**: `eventos`
 - **Created**: 2026-09-17 15:07:15 (America/Panama / GMT-05:00)
-- **Modified**: 2026-09-24 16:11:50 (America/Panama / GMT-05:00)
-- **MD5**: `e7de3a2afa7b95abecf0667abb0f7e2c`
-- **SHA256**: `2ffcfa332683ea5d7515f3419095da337c1a4cc233e5742d1bec68ee2f08a969`
+- **Modified**: 2026-09-24 16:26:14 (America/Panama / GMT-05:00)
+- **MD5**: `c5719ea87acf1e748d2caa24ac197e85`
+- **SHA256**: `ab44122c1c60a8e2457347b131ac2530d8273ce100ff267835af8a8bfd4e07ef`
 - **Encoding**: ASCII
 
 **File code content:**
@@ -160246,40 +160248,6 @@ def reporte(dato):
     return ("INFO", f"Reporte guardado en {config.ARCHIVO_BITACORA} "
                     f"({dato['metricas']} metricas)")
 
-# ---------------------------------------------------------------------------
-# El diccionario que conecta cada evento con su manejador.
-# Se escribe el nombre de la funcion SIN parentesis: con parentesis se
-# guardaria el resultado de ejecutarla, no la funcion.
-# Agregar un evento nuevo es agregar una linea aqui.
-# ---------------------------------------------------------------------------
-MANEJADORES = {
-    "cpu_alta": cpu_alta,
-    "cpu_normal": cpu_normal,
-    "nucleo_saturado": nucleo_saturado,
-    "nucleo_libre": nucleo_libre,
-    "ram_alta": ram_alta,
-    "ram_normal": ram_normal,
-    "swap_activo": swap_activo,
-    "swap_inactivo": swap_inactivo,
-    "disco_lleno": disco_lleno,
-    "disco_aliviado": disco_aliviado,
-    "red_pico": red_pico,
-    "red_calma": red_calma,
-    "proceso_nuevo": proceso_nuevo,
-    "proceso_cerrado": proceso_cerrado,
-    "proceso_pesado": proceso_pesado,
-    "bateria_baja": bateria_baja,
-    "bateria_recuperada": bateria_recuperada,
-    "cargador_conectado": cargador_conectado,
-    "cargador_desconectado": cargador_desconectado,
-    "sensor_ausente": sensor_ausente,
-    "lectura_invalida": lectura_invalida,
-    "salto_anomalo": salto_anomalo,
-    "reporte": reporte,
-    "red_perdida": red_perdida, #LABORATORIO
-    "red_restaurada": red_restaurada, #LABORATORIO
-    "red_sin_conexion": red_sin_conexion, #LAboRATORIO
-}
 
 def manejador_sonido(evento):
     """Manejador que reproduce un sonido basado en el evento."""
@@ -160315,6 +160283,42 @@ def red_restaurada(dato):
 
 def red_sin_conexion(dato):
     return ("AVISO", f"Red sigue caida ({dato['segundos']} s)")
+# ---------------------------------------------------------------------------
+# El diccionario que conecta cada evento con su manejador.
+# Se escribe el nombre de la funcion SIN parentesis: con parentesis se
+# guardaria el resultado de ejecutarla, no la funcion.
+# Agregar un evento nuevo es agregar una linea aqui.
+# ---------------------------------------------------------------------------
+MANEJADORES = {
+    "cpu_alta": cpu_alta,
+    "cpu_normal": cpu_normal,
+    "nucleo_saturado": nucleo_saturado,
+    "nucleo_libre": nucleo_libre,
+    "ram_alta": ram_alta,
+    "ram_normal": ram_normal,
+    "swap_activo": swap_activo,
+    "swap_inactivo": swap_inactivo,
+    "disco_lleno": disco_lleno,
+    "disco_aliviado": disco_aliviado,
+    "red_pico": red_pico,
+    "red_calma": red_calma,
+    "proceso_nuevo": proceso_nuevo,
+    "proceso_cerrado": proceso_cerrado,
+    "proceso_pesado": proceso_pesado,
+    "bateria_baja": bateria_baja,
+    "bateria_recuperada": bateria_recuperada,
+    "cargador_conectado": cargador_conectado,
+    "cargador_desconectado": cargador_desconectado,
+    "sensor_ausente": sensor_ausente,
+    "lectura_invalida": lectura_invalida,
+    "salto_anomalo": salto_anomalo,
+    "reporte": reporte,
+    "red_perdida": red_perdida, #LABORATORIO
+    "red_restaurada": red_restaurada, #LABORATORIO
+    "red_sin_conexion": red_sin_conexion, #LAboRATORIO
+}
+
+
 ```
 
 ---

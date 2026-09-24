@@ -103,6 +103,38 @@ def reporte(dato):
     return ("INFO", f"Reporte guardado en {config.ARCHIVO_BITACORA} "
                     f"({dato['metricas']} metricas)")
 
+#LABORATORIO
+SONIDOS_POR_EVENTO = {
+    "cpu_alta":        "cpu_alta",
+    "ram_alta":        "ram_alta",
+    "disco_lleno":     "disco_lleno",
+    "red_pico":        "red_pico",
+    "red_perdida":     "red_perdida",
+    "red_restaurada":  "red_restaurada",
+}
+# LABORATORIO
+
+def manejador_sonido(evento):
+    """Reproduce un sonido segun el tipo de evento. NO bloquea."""
+    nombre = evento.get("origen")   # aquí va el nombre del evento
+    nivel  = evento.get("nivel")
+
+    clave = SONIDOS_POR_EVENTO.get(nombre)
+    if clave:
+        reproductor.reproducir(clave, evento)
+    elif nivel in ("ALERTA", "FALLA"):
+        reproductor.reproducir("default", evento)
+# --- Red: flanco y recordatorio ---
+#LABORATORIO
+
+def red_perdida(dato):
+    return ("ALERTA", "Se perdio la conexion de red")
+
+def red_restaurada(dato):
+    return ("INFO", "Conexion de red restaurada")
+
+def red_sin_conexion(dato):
+    return ("AVISO", f"Red sigue caida ({dato['segundos']} s)")
 # ---------------------------------------------------------------------------
 # El diccionario que conecta cada evento con su manejador.
 # Se escribe el nombre de la funcion SIN parentesis: con parentesis se
@@ -138,37 +170,3 @@ MANEJADORES = {
     "red_sin_conexion": red_sin_conexion, #LAboRATORIO
 }
 
-def manejador_sonido(evento):
-    """Manejador que reproduce un sonido basado en el evento."""
-    nivel = evento.get("nivel")
-    origen = evento.get("origen")
-    mensaje = evento.get("mensaje")
-
-    # Determinamos qué sonido reproducir basado en el origen o el nivel
-    if origen == "red":
-        if "pérdida" in mensaje.lower():
-            reproductor.reproducir("red_perdida", evento)
-        elif "restaurada" in mensaje.lower():
-            reproductor.reproducir("red_restaurada", evento)
-        else:
-            reproductor.reproducir("red_pico", evento)
-    elif origen == "cpu":
-        reproductor.reproducir("cpu_alto", evento)
-    elif origen == "memoria":
-        reproductor.reproducir("ram_alta", evento)
-    elif origen == "disco":
-        reproductor.reproducir("disco_lleno", evento)
-    elif nivel in ("ALERTA", "FALLA"):
-        reproductor.reproducir("default", evento)
-
-# --- Red: flanco y recordatorio ---
-#LABORATORIO
-
-def red_perdida(dato):
-    return ("ALERTA", "Se perdio la conexion de red")
-
-def red_restaurada(dato):
-    return ("INFO", "Conexion de red restaurada")
-
-def red_sin_conexion(dato):
-    return ("AVISO", f"Red sigue caida ({dato['segundos']} s)")

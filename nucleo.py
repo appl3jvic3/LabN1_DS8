@@ -18,9 +18,7 @@ import config
 import sensores
 import eventos
 import almacenamiento as registro
-from eventos.despachador import despachador
 from eventos import manejadores
-from eventos.red import monitor_red
 from eventos.red import revisar as revisar_red
 
 # Que metricas se leen rapido y cuales despacio. Consultar los procesos
