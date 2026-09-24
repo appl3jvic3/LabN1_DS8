@@ -32,3 +32,33 @@ def atender(nombre, dato):
 def eventos_conocidos():
     """Nombres de todos los eventos que el sistema sabe atender."""
     return sorted(MANEJADORES.keys())
+
+# LABORATORIO
+
+_suscriptores = []
+
+def suscribir(funcion):
+    """Registra un callback extra que recibe cada evento atendido."""
+    _suscriptores.append(funcion)
+
+def atender(nombre, dato):
+    manejador = MANEJADORES.get(nombre)
+    if manejador is None:
+        registro = registro.registrar_evento(
+            "FALLA", nombre, f"Evento sin manejador registrado: {nombre}")
+    else:
+        try:
+            nivel, mensaje = manejador(dato)
+            registro = registro.registrar_evento(nivel, nombre, mensaje)
+        except Exception as error:
+            registro = registro.registrar_evento(
+                "FALLA", nombre, f"Error en el manejador: {error}")
+
+    # Notificar a los suscriptores (ej. sonido) sin bloquear.
+    for s in _suscriptores:
+        try:
+            s(registro)
+        except Exception:
+            pass
+
+    return registro

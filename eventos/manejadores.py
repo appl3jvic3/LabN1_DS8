@@ -133,6 +133,9 @@ MANEJADORES = {
     "lectura_invalida": lectura_invalida,
     "salto_anomalo": salto_anomalo,
     "reporte": reporte,
+    "red_perdida": red_perdida, #LABORATORIO
+    "red_restaurada": red_restaurada, #LABORATORIO
+    "red_sin_conexion": red_sin_conexion, #LAboRATORIO
 }
 
 def manejador_sonido(evento):
@@ -157,3 +160,15 @@ def manejador_sonido(evento):
         reproductor.reproducir("disco_lleno", evento)
     elif nivel in ("ALERTA", "FALLA"):
         reproductor.reproducir("default", evento)
+
+# --- Red: flanco y recordatorio ---
+#LABORATORIO
+
+def red_perdida(dato):
+    return ("ALERTA", "Se perdio la conexion de red")
+
+def red_restaurada(dato):
+    return ("INFO", "Conexion de red restaurada")
+
+def red_sin_conexion(dato):
+    return ("AVISO", f"Red sigue caida ({dato['segundos']} s)")

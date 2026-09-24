@@ -21,6 +21,7 @@ import almacenamiento as registro
 from eventos.despachador import despachador
 from eventos import manejadores
 from eventos.red import monitor_red
+from eventos.red import revisar as revisar_red
 
 # Que metricas se leen rapido y cuales despacio. Consultar los procesos
 # es caro; consultar la CPU no lo es.
@@ -96,6 +97,9 @@ def ciclo():
     if ahora - _marcas["reporte"] >= config.PERIODO_REPORTE:
         nuevos.append(generar_reporte())
         _marcas["reporte"] = ahora
+
+    for nombre, dato in revisar_red():
+        nuevos.append(eventos.atender(nombre, dato))
 
     return {"lecturas": dict(_ultimas), "eventos": nuevos}
 

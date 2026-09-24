@@ -1,75 +1,73 @@
-# eventos/red.py
-import threading
+"""
+eventos/red.py
+Deteccion de perdida/recuperacion de conexion por FLANCO y
+recordatorio por TIEMPO, integrado al despachador de eventos.
+
+- El flanco se detecta comparando el estado actual con el anterior.
+- El recordatorio se evalua con marcas de tiempo dentro del ciclo
+  de monitoreo (funcion revisar()).
+- No usa hilos propios: el nucleo lo llama desde su ciclo.
+"""
+#LABORATORIO
 import time
-import subprocess
-import platform
-import logging
-from eventos import despachador
-from almacenamiento import registro  # Para registrar el evento
+import socket
 
-logger = logging.getLogger(__name__)
+# Estado del modulo
+_estado = {
+    "conectado": None,       # None = aun no se sabe
+    "ultimo_cambio": 0.0,    # marca de tiempo del ultimo flanco
+    "ultimo_aviso": 0.0,     # marca del ultimo recordatorio
+}
 
-class MonitorRed:
+# Cada cuanto se recuerda que la red sigue caida (segundos)
+INTERVALO_RECORDATORIO = 60.0
+
+# Host de prueba para verificar conectividad
+HOST_PRUEBA = ("8.8.8.8", 53)
+TIMEOUT = 1.5
+
+
+def _hay_conexion():
+    """Prueba rapida de conectividad con un socket TCP."""
+    try:
+        with socket.create_connection(HOST_PRUEBA, timeout=TIMEOUT):
+            return True
+    except OSError:
+        return False
+
+
+def revisar():
     """
-    Monitorea la conectividad de red y genera eventos por flanco.
+    Se llama desde nucleo.ciclo() en cada vuelta.
+    Devuelve una lista de tuplas (nombre_evento, dato) para el despachador.
     """
-    def __init__(self, host="8.8.8.8", intervalo=10, recordatorio=60):
-        self.host = host
-        self.intervalo = intervalo
-        self.recordatorio = recordatorio
-        self.estado_actual = True  # Asumimos que hay conexión al inicio
-        self.ultimo_cambio = time.time()
-        self.activo = True
-        self.hilo = threading.Thread(target=self._bucle_monitoreo, daemon=True)
-        self.hilo.start()
-        logger.info(f"Monitor de red iniciado. Host: {host}, Intervalo: {intervalo}s")
+    eventos = []
+    ahora = time.time()
+    hay = _hay_conexion()
 
-    def _ping(self):
-        """Realiza un ping al host. Devuelve True si hay respuesta."""
-        param = '-n' if platform.system().lower() == 'windows' else '-c'
-        command = ['ping', param, '1', self.host]
-        try:
-            # Ejecutamos con timeout para no bloquear mucho
-            result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
-            return result.returncode == 0
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-            return False
+    # --- Primer arranque: solo se guarda el estado, no se genera flanco ---
+    if _estado["conectado"] is None:
+        _estado["conectado"] = hay
+        _estado["ultimo_cambio"] = ahora
+        _estado["ultimo_aviso"] = ahora
+        return eventos
 
-    def _bucle_monitoreo(self):
-        while self.activo:
-            time.sleep(self.intervalo)
-            hay_conexion = self._ping()
-            ahora = time.time()
+    # --- FLANCO: cambio de estado ---
+    if hay != _estado["conectado"]:
+        _estado["conectado"] = hay
+        _estado["ultimo_cambio"] = ahora
+        _estado["ultimo_aviso"] = ahora
+        if hay:
+            eventos.append(("red_restaurada", {}))
+        else:
+            eventos.append(("red_perdida", {}))
+        return eventos
 
-            if hay_conexion != self.estado_actual:
-                # Cambio de estado (flanco)
-                self.estado_actual = hay_conexion
-                self.ultimo_cambio = ahora
-                if hay_conexion:
-                    mensaje = "Conexión de red restaurada."
-                    nivel = "INFO"
-                else:
-                    mensaje = "Pérdida de conexión de red."
-                    nivel = "ALERTA"
+    # --- TIEMPO: recordatorio si sigue caida ---
+    if not hay:
+        if ahora - _estado["ultimo_aviso"] >= INTERVALO_RECORDATORIO:
+            _estado["ultimo_aviso"] = ahora
+            segundos = int(ahora - _estado["ultimo_cambio"])
+            eventos.append(("red_sin_conexion", {"segundos": segundos}))
 
-                # Registramos el evento. Esto disparará a todos los manejadores, incluido el sonido.
-                registro.registrar_evento(nivel, "red", mensaje)
-                # O también podríamos llamar directamente al despachador si quisiéramos.
-                # despachador.despachar_evento(...)
-                logger.info(f"Evento de red: {mensaje}")
-
-            elif not self.estado_actual:
-                # Si sigue sin conexión, verificar recordatorio
-                if ahora - self.ultimo_cambio >= self.recordatorio:
-                    self.ultimo_cambio = ahora
-                    mensaje = "Recordatorio: Conexión de red sigue perdida."
-                    registro.registrar_evento("AVISO", "red", mensaje)
-                    logger.info(mensaje)
-
-    def detener(self):
-        self.activo = False
-        self.hilo.join()
-        logger.info("Monitor de red detenido.")
-
-# Instancia global
-monitor_red = MonitorRed()
+    return eventos
